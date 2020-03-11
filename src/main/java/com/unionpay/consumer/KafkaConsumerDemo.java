@@ -36,6 +36,8 @@ public class KafkaConsumerDemo {
 				msg += consumerRecord.value();
 			}
 			consumer.close();
+
+			System.out.println("consumer data:    "+msg);
 			return msg;
 		}
 	}

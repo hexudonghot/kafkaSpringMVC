@@ -7,6 +7,8 @@ import javax.annotation.Resource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -14,16 +16,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.unionpay.consumer.KafkaConsumerDemo;
-import com.unionpay.producer.KafkaProducerDemo;
 
 @Controller
 public class KafkaController {
 
-	@Resource(name = "kafkaProducerDemo")
-	KafkaProducerDemo producer;
-
-	@Resource(name = "kafkaConsumerDemo")
-	KafkaConsumerDemo consumer;
+	@Autowired
+	private KafkaTemplate<String, String> kafkaTemplate;
 
 	private static final Logger logger = LoggerFactory.getLogger(KafkaController.class);
 //       http://localhost:8080/spring/welcome
@@ -33,6 +31,7 @@ public class KafkaController {
 		logger.info("aaaaaaaaaaaaaaaa");
 		ModelAndView mv = new ModelAndView();
 		mv.setViewName("welcome");
+		kafkaTemplate.send("aaa","bbbbbbb");
 		return mv;
 	}
 
@@ -54,17 +53,16 @@ public class KafkaController {
 
 		ModelAndView mv = new ModelAndView();
 		mv.addObject("time", now);
-		mv.setViewName("/WEB-INF/kafka_send.jsp");
+		mv.setViewName("kafka_send");
 		return mv;
 	}
 
-	@RequestMapping(value = "/onsend", method = RequestMethod.POST)
-	public ModelAndView onsend(@RequestParam("message") String msg) {
+	@RequestMapping("onsend")
+	public ModelAndView onsend() {
 		System.out.println("--------onsend--------");
-		producer.sendMessage(msg);
 
 		ModelAndView mv = new ModelAndView();
-		mv.setViewName("/WEB-INF/welcome.jsp");
+		mv.setViewName("welcome");
 		return mv;
 	}
 
@@ -72,11 +70,9 @@ public class KafkaController {
 	public ModelAndView receive() {
 		System.out.println("--------receive--------");
 		
-		String msg = consumer.receive();
-		
+
 		ModelAndView mv = new ModelAndView();
-		mv.addObject("msg", msg);
-		mv.setViewName("/WEB-INF/kafka_receive.jsp");
+		mv.setViewName("kafka_receive");
 		return mv;
 	}
 

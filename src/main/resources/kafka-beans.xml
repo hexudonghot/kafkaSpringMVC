@@ -10,37 +10,97 @@
 	<context:component-scan base-package="com.unionpay.*"></context:component-scan>
 
 
-	<bean id="kafkaProducerDemo" class="com.unionpay.producer.KafkaProducerDemo">
-		<property name="properties">
-			<props>
-				<prop key="topic">my-replicated-topic</prop>
-				<prop key="bootstrap.servers">10.110.4.45:9192</prop>
-				<prop key="acks">all</prop>
-				<prop key="key.serializer">org.apache.kafka.common.serialization.StringSerializer
-				</prop>
-				<prop key="value.serializer">org.apache.kafka.common.serialization.StringSerializer
-				</prop>
-				<prop key="buffer.memory">33554432</prop>
-			</props>
-
-		</property>
+	<bean id="consumerProperties" class="java.util.HashMap">
+		<constructor-arg>
+			<map>
+				<entry key="bootstrap.servers" value="10.110.2.11:9092" />
+				<entry key="group.id" value="g1" />
+				<entry key="enable.auto.commit" value="true" />
+				<entry key="auto.commit.interval.ms" value="1000" />
+				<entry key="session.timeout.ms" value="15000" />
+				<entry key="key.deserializer"
+					   value="org.apache.kafka.common.serialization.StringDeserializer" />
+				<entry key="value.deserializer"
+					   value="org.apache.kafka.common.serialization.StringDeserializer" />
+			</map>
+		</constructor-arg>
 	</bean>
 
-	<bean id="kafkaConsumerDemo" class="com.unionpay.consumer.KafkaConsumerDemo">
-		<property name="props">
-			<props>
-				<prop key="topic">my-replicated-topic</prop>
-				<prop key="bootstrap.servers">10.110.4.45:9192</prop>
-				<prop key="group.id">group1</prop>
-				<prop key="enable.auto.commit">true</prop>
-				<prop key="auto.commit.interval.ms">1000</prop>
-				<prop key="session.timeout.ms">30000</prop>
-				<prop key="key.deserializer">org.apache.kafka.common.serialization.StringDeserializer
-				</prop>
-				<prop key="value.deserializer">org.apache.kafka.common.serialization.StringDeserializer
-				</prop>
-			</props>
+	<bean id="messageListernerConsumerListener" class="com.unionpay.consumer.KafkaConsumer1Listener" />
 
-		</property>
+	<!-- 创建consumerFactory bean -->
+	<bean id="consumerFactory"
+		  class="org.springframework.kafka.core.DefaultKafkaConsumerFactory">
+		<constructor-arg>
+			<ref bean="consumerProperties" />
+		</constructor-arg>
 	</bean>
+
+
+
+	<!-- 消费者容器配置信息,多topic配置 -->
+	<bean id="ztf_containerProperties"
+		  class="org.springframework.kafka.listener.ContainerProperties">
+		<constructor-arg value="ztfTopic" />
+		<property name="messageListener" ref="messageListernerConsumerListener" />
+	</bean>
+	<bean id="hhcf_containerProperties"
+		  class="org.springframework.kafka.listener.ContainerProperties">
+		<constructor-arg value="aaa" />
+		<property name="messageListener" ref="messageListernerConsumerListener" />
+	</bean>
+
+	<!-- 创建messageListenerContainer,多topic配置 -->
+	<bean id="ztf_kafkaMessageListenerContainer" init-method="doStart"
+		  class="org.springframework.kafka.listener.KafkaMessageListenerContainer">
+		<constructor-arg ref="consumerFactory" />
+		<constructor-arg ref="ztf_containerProperties" />
+	</bean>
+	<bean id="hhcf_kafkaMessageListenerContainer" init-method="doStart"
+		  class="org.springframework.kafka.listener.KafkaMessageListenerContainer">
+		<constructor-arg ref="consumerFactory" />
+		<constructor-arg ref="hhcf_containerProperties" />
+	</bean>
+
+
+
+
+	<!-- 定义producer的参数 -->
+	<bean id="producerProperties" class="java.util.HashMap">
+		<constructor-arg>
+			<map>
+				<entry key="bootstrap.servers" value="10.110.2.11:9092" />
+				<entry key="group.id" value="0" />
+				<entry key="retries" value="1" />
+				<entry key="batch.size" value="16384" />
+				<entry key="linger.ms" value="1" />
+				<entry key="buffer.memory" value="33554432" />
+				<entry key="key.serializer"
+					   value="org.apache.kafka.common.serialization.StringSerializer" />
+				<entry key="value.serializer"
+					   value="org.apache.kafka.common.serialization.StringSerializer" />
+			</map>
+		</constructor-arg>
+	</bean>
+
+	<!-- 创建kafkatemplate需要使用的producerfactory bean -->
+	<bean id="producerFactory"
+		  class="org.springframework.kafka.core.DefaultKafkaProducerFactory">
+		<constructor-arg>
+			<ref bean="producerProperties" />
+		</constructor-arg>
+	</bean>
+
+	<!-- 创建kafkatemplate bean，使用的时候，只需要注入这个bean，即可使用template的send消息方法 -->
+	<bean id="kafkaTemplate" class="org.springframework.kafka.core.KafkaTemplate">
+		<constructor-arg ref="producerFactory" />
+		<constructor-arg name="autoFlush" value="true" />
+		<!--
+		<property name="defaultTopic" value="ztfTopic" />
+		 -->
+		<property name="producerListener" ref="producerListener" />
+	</bean>
+
+	<bean id="producerListener" class="com.unionpay.producer.KafkaProducerListener" />
+
 </beans>
