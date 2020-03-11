@@ -7,8 +7,6 @@ import org.springframework.kafka.support.ProducerListener;
  * 
  * @ClassName: KafkaProducerListener
  * @Description: 消息生产端 监听器，在producer配置文件中开启
- * @author: zhaotf
- * @date: 2017年2月22日 下午9:01:37
  */
 @SuppressWarnings("rawtypes")
 public class KafkaProducerListener implements ProducerListener {
