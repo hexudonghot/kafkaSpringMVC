@@ -7,8 +7,6 @@ import org.springframework.kafka.listener.MessageListener;
  * 
  * @Title: KafkaConsumerListener
  * @Description:kafka消息中间件，消费端监听，发现、拉取 消息
- * @Author: zhaotf
- * @Since:2017年2月23日 下午4:54:13
  * @Version:1.0
  */
 public class KafkaConsumer1Listener implements MessageListener<String, String> {
